@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use palette::{Hsl, IntoColor, Srgb};
 use pixels::Pixels;
 use pixels::wgpu::Color;
@@ -23,7 +21,6 @@ pub struct World {
 
     updated_indexes_internal: Vec<usize>,
     updated_indexes: Vec<usize>,
-    updated_lines: HashSet<usize>,
     priority: [usize; 2],
     colour: Hsl,
 }
@@ -52,7 +49,6 @@ impl World {
             next_array: vec![element; size],
             updated_indexes_internal: vec![],
             updated_indexes: vec![],
-            updated_lines: HashSet::new(),
             priority: [0, 2],
             colour: Hsl::new(
                 0., SATURATION, LIGHTNESS,
@@ -90,17 +86,6 @@ impl World {
 
             self.update_buffer();
         }
-    }
-
-    fn update_line(&mut self) {
-        //copy the lines that got changed
-        for line in &self.updated_lines {
-            let i_start = self.index_at(0, *line);
-            let i_stop = self.index_at(self.width - 1, *line);
-            let line_array = &mut self.array[i_start..i_stop + 1];
-            line_array.copy_from_slice(&self.next_array[i_start..i_stop + 1]);
-        }
-        self.updated_lines.clear();
     }
 
     fn update_buffer(&mut self) {
@@ -179,7 +164,6 @@ impl World {
         func(&mut e, i);
         self.next_array[i] = e;
         self.updated_indexes_internal.push(i);
-        self.updated_lines.insert(y);
     }
 
     pub fn swap_elements_at(&mut self, a: (usize, usize), b: (usize, usize)) -> ()
@@ -192,9 +176,6 @@ impl World {
 
         self.updated_indexes_internal.push(i_a);
         self.updated_indexes_internal.push(i_b);
-
-        self.updated_lines.insert(a.1);
-        self.updated_lines.insert(b.1);
     }
 
     fn index_at(&self, x: usize, y: usize) -> usize {
