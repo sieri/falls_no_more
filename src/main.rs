@@ -1,5 +1,4 @@
 use pixels::{Pixels, SurfaceTexture};
-use pixels::wgpu::Color;
 use winit::dpi::LogicalSize;
 use winit::event::{ElementState, Event, MouseButton, WindowEvent};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -9,7 +8,7 @@ use crate::world::World;
 
 mod world;
 
-const SCALE: u32 = 10;
+const SCALE: u32 = 5;
 
 
 struct MouseState {
@@ -22,7 +21,7 @@ fn main() {
     let event_loop = EventLoop::new().unwrap();
 
 
-    let size = LogicalSize::new(1000f64, 1000f64);
+    let size = LogicalSize::new(1000f64, 500f64);
 
     let window = WindowBuilder::new()
         .with_inner_size(size)
@@ -64,24 +63,17 @@ fn main() {
                 }
                 Event::AboutToWait => {
                     // Application update code.
-
-                    // Queue a RedrawRequested event.
-                    //
-                    // You only need to call this if you've determined that you need to redraw in
-                    // applications which do not always need to. Applications that redraw continuously
-                    // can render here instead.
                     window.request_redraw();
                 }
                 Event::WindowEvent {
                     event: WindowEvent::RedrawRequested,
                     ..
                 } => {
+                    if mouse_state.clicked {
+                        world.clicked(mouse_state.x, mouse_state.y);
+                    }
+                    world.fall();
                     // Redraw the application.
-                    //
-                    // It's preferable for applications that do not render continuously to render in
-                    // this event rather than in AboutToWait, since rendering in here allows
-                    // the program to gracefully handle redraws requested by the OS.
-
                     world.show(&mut pixels);
 
                     if let Err(err) = pixels.render() {
@@ -101,10 +93,9 @@ fn main() {
                     match pressed {
                         ElementState::Pressed => {
                             // if new click
-                            if !mouse_state.clicked {
-                                pixels.clear_color(Color::BLACK);
-                                world.clicked(mouse_state.x, mouse_state.y);
-                            }
+                            if !mouse_state.clicked {}
+
+
                             mouse_state.clicked = true
                         }
                         ElementState::Released => {
