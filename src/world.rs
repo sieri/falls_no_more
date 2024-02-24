@@ -1,3 +1,4 @@
+use palette::{Hsl, IntoColor, Srgb};
 use pixels::Pixels;
 use pixels::wgpu::Color;
 use rand::Rng;
@@ -8,6 +9,10 @@ use crate::world::element::ElementKind::{Empty, Sand};
 
 mod element;
 
+const SATURATION: f32 = 0.5;
+const LIGHTNESS: f32 = 0.5;
+const HUE_OFFSET: f32 = 25.0;
+
 pub struct World {
     height: usize,
     width: usize,
@@ -15,6 +20,7 @@ pub struct World {
 
     updated_indexes: Vec<usize>,
     priority: [usize; 2],
+    colour: Hsl,
 }
 
 
@@ -40,6 +46,9 @@ impl World {
             array: vec![element; size],
             updated_indexes: vec![],
             priority: [0, 2],
+            colour: Hsl::new(
+                0., SATURATION, LIGHTNESS,
+            ),
         }
     }
 
@@ -85,6 +94,7 @@ impl World {
 
         let mut rng = rand::thread_rng();
 
+
         if rng.gen_bool(0.5) {
             let temp = self.priority[0];
             self.priority[0] = self.priority[1];
@@ -113,12 +123,14 @@ impl World {
 
     ///add sand to the point clicked
     pub fn clicked(&mut self, x: usize, y: usize) -> () {
+        let color: Srgb = self.colour.into_color();
+        self.colour.hue += HUE_OFFSET;
         self.change_element_at(x, y, |e, _| {
             e.kind = Sand;
             e.colour = Color {
-                r: 1.0,
-                g: 1.0,
-                b: 1.0,
+                r: color.red as f64,
+                g: color.green as f64,
+                b: color.blue as f64,
                 a: 1.0,
             };
         });

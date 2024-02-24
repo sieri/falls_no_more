@@ -8,8 +8,7 @@ use crate::world::World;
 
 mod world;
 
-const SCALE: u32 = 3;
-
+const SCALE: u32 = 15;
 
 struct MouseState {
     pub x: usize,
@@ -19,7 +18,6 @@ struct MouseState {
 
 fn main() {
     let event_loop = EventLoop::new().unwrap();
-
 
     let size = LogicalSize::new(1000f64, 500f64);
 
@@ -95,12 +93,9 @@ fn main() {
                             // if new click
                             if !mouse_state.clicked {}
 
-
                             mouse_state.clicked = true
                         }
-                        ElementState::Released => {
-                            mouse_state.clicked = false
-                        }
+                        ElementState::Released => mouse_state.clicked = false,
                     }
                 }
                 Event::WindowEvent {
