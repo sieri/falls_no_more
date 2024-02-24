@@ -124,7 +124,6 @@ impl World {
 
         let mut rng = rand::thread_rng();
 
-
         if rng.gen_bool(0.5) {
             let temp = self.priority[0];
             self.priority[0] = self.priority[1];
@@ -135,7 +134,10 @@ impl World {
             if x == 0 && offset == 0 {
                 continue;
             }
-            if x == self.width && offset == 2 {
+            if x >= self.width - 1 && offset == 2 {
+                continue;
+            }
+            if y >= self.height - 1 {
                 continue;
             }
 
@@ -156,6 +158,10 @@ impl World {
         let color: Srgb = self.colour.into_color();
         self.colour.hue += HUE_OFFSET;
         self.change_element_at(x, y, |e, _| {
+            if e.kind == Sand {
+                return;
+            }
+
             e.kind = Sand;
             e.colour = Color {
                 r: color.red as f64,
