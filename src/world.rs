@@ -12,7 +12,6 @@ pub struct World {
     height: usize,
     width: usize,
     array: Vec<Element>,
-    next_array: Vec<Element>,
 
     updated_indexes: Vec<usize>,
     priority: [usize; 2],
@@ -39,7 +38,6 @@ impl World {
             height,
             width,
             array: vec![element; size],
-            next_array: vec![element; size],
             updated_indexes: vec![],
             priority: [0, 2],
         }
@@ -54,8 +52,6 @@ impl World {
 
     ///update pixels with only those edited
     pub fn show(&mut self, pixels: &mut Pixels) -> () {
-        self.array = self.next_array.clone();
-
         for updated_index in &self.updated_indexes {
             let pixel_index = updated_index * 4;
             let pixel = &mut pixels.frame_mut()[pixel_index..pixel_index + 4];
@@ -131,9 +127,8 @@ impl World {
     pub fn change_element_at<F>(&mut self, x: usize, y: usize, func: F) -> () where F: Fn(&mut Element, usize) -> ()
     {
         let i = self.index_at(x, y);
-        let mut e = self.array[i].clone();
-        func(&mut e, i);
-        self.next_array[i] = e;
+        let e = &mut self.array[i];
+        func(e, i);
         self.updated_indexes.push(i);
     }
 
@@ -142,8 +137,9 @@ impl World {
         let i_a = self.index_at(a.0, a.1);
         let i_b = self.index_at(b.0, b.1);
 
-        self.next_array[i_a] = self.array[i_b];
-        self.next_array[i_b] = self.array[i_a];
+        let temp = self.array[i_a];
+        self.array[i_a] = self.array[i_b];
+        self.array[i_b] = temp;
 
         self.updated_indexes.push(i_a);
         self.updated_indexes.push(i_b);
