@@ -8,7 +8,7 @@ use crate::world::World;
 
 mod world;
 
-const SCALE: u32 = 3;
+const SCALE: u32 = 1;
 
 struct MouseState {
     pub x: usize,

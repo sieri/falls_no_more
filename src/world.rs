@@ -21,6 +21,7 @@ pub struct World {
     array: Vec<Element>,
     next_array: Vec<Element>,
 
+    updated_indexes_internal: Vec<usize>,
     updated_indexes: Vec<usize>,
     updated_lines: HashSet<usize>,
     priority: [usize; 2],
@@ -49,6 +50,7 @@ impl World {
             width,
             array: vec![element; size],
             next_array: vec![element; size],
+            updated_indexes_internal: vec![],
             updated_indexes: vec![],
             updated_lines: HashSet::new(),
             priority: [0, 2],
@@ -67,8 +69,6 @@ impl World {
 
     ///update pixels with only those edited
     pub fn show(&mut self, pixels: &mut Pixels) -> () {
-        self.array = self.next_array.clone();
-
         for updated_index in &self.updated_indexes {
             let pixel_index = updated_index * 4;
             let pixel = &mut pixels.frame_mut()[pixel_index..pixel_index + 4];
@@ -88,15 +88,28 @@ impl World {
                 }
             }
 
-            //copy the two lines that got changed
-            for line in &self.updated_lines {
-                let i_start = self.index_at(0, *line);
-                let i_stop = self.index_at(self.width - 1, *line);
-                let line_array = &mut self.array[i_start..i_stop + 1];
-                line_array.copy_from_slice(&self.next_array[i_start..i_stop + 1]);
-            }
-            self.updated_lines.clear();
+            self.update_buffer();
         }
+    }
+
+    fn update_line(&mut self) {
+        //copy the lines that got changed
+        for line in &self.updated_lines {
+            let i_start = self.index_at(0, *line);
+            let i_stop = self.index_at(self.width - 1, *line);
+            let line_array = &mut self.array[i_start..i_stop + 1];
+            line_array.copy_from_slice(&self.next_array[i_start..i_stop + 1]);
+        }
+        self.updated_lines.clear();
+    }
+
+    fn update_buffer(&mut self) {
+        for updated_index in &self.updated_indexes_internal {
+            let i = *updated_index;
+            self.updated_indexes.push(i);
+            self.array[i] = self.next_array[i];
+        }
+        self.updated_indexes_internal.clear()
     }
 
     ///compute if a sand need to fall
@@ -159,7 +172,7 @@ impl World {
         let mut e = self.array[i].clone();
         func(&mut e, i);
         self.next_array[i] = e;
-        self.updated_indexes.push(i);
+        self.updated_indexes_internal.push(i);
         self.updated_lines.insert(y);
     }
 
@@ -171,8 +184,8 @@ impl World {
         self.next_array[i_a] = self.array[i_b];
         self.next_array[i_b] = self.array[i_a];
 
-        self.updated_indexes.push(i_a);
-        self.updated_indexes.push(i_b);
+        self.updated_indexes_internal.push(i_a);
+        self.updated_indexes_internal.push(i_b);
 
         self.updated_lines.insert(a.1);
         self.updated_lines.insert(b.1);
